@@ -53,9 +53,10 @@
   }, { threshold: .4 });
   document.querySelectorAll(".videos video").forEach(function (v) { vo.observe(v); });
 
-  // Depoimentos em loop contínuo
-  var tr = document.querySelector(".track");
-  if (tr) tr.innerHTML += tr.innerHTML;
+  // Inicial do cliente no avatar
+  document.querySelectorAll(".rev").forEach(function (r) {
+    r.querySelector(".av").textContent = r.querySelector(".nm").textContent.trim().charAt(0).toUpperCase();
+  });
 
   // Entrada suave das seções
   var ro = new IntersectionObserver(function (es) {
