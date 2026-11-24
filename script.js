@@ -24,22 +24,34 @@
     }
   }
 
-  // Antes e depois
+  // Antes e depois (arraste com mouse ou dedo; teclado pelo campo oculto)
   document.querySelectorAll("[data-ba]").forEach(function (el) {
-    var inp = el.querySelector("input");
-    function set(v) { el.style.setProperty("--p", v + "%"); }
-    inp.addEventListener("input", function () { set(inp.value); });
+    var inp = el.querySelector("input"), drag = false, auto = true;
+    function set(v) {
+      v = Math.max(0, Math.min(100, v));
+      el.style.setProperty("--p", v + "%"); inp.value = v;
+    }
+    function fromX(x) { var r = el.getBoundingClientRect(); set((x - r.left) / r.width * 100); }
+    el.addEventListener("pointerdown", function (e) {
+      auto = false; drag = true;
+      try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      fromX(e.clientX);
+    });
+    el.addEventListener("pointermove", function (e) { if (drag) fromX(e.clientX); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (n) {
+      el.addEventListener(n, function () { drag = false; });
+    });
+    inp.addEventListener("input", function () { auto = false; set(+inp.value); });
     if (reduce) return;
-    var done = false;
     new IntersectionObserver(function (e, o) {
-      if (!e[0].isIntersecting || done) return;
-      done = true; o.disconnect();
+      if (!e[0].isIntersecting) return;
+      o.disconnect();
       var t0 = performance.now();
       (function step(t) {
+        if (!auto) return;
         var k = Math.min((t - t0) / 2200, 1);
-        var v = 50 + Math.sin(k * Math.PI * 2) * 38 * (1 - k * .4);
-        set(v); inp.value = v;
-        if (k < 1) requestAnimationFrame(step); else { set(50); inp.value = 50; }
+        set(50 + Math.sin(k * Math.PI * 2) * 38 * (1 - k * .4));
+        if (k < 1) requestAnimationFrame(step); else set(50);
       })(t0);
     }, { threshold: .6 }).observe(el);
   });
